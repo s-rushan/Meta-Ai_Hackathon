@@ -1,0 +1,105 @@
+name: email-triage-env
+version: "1.0.0"
+description: >
+  A real-world email triage environment where an AI agent must classify,
+  prioritize, categorize, and route incoming business emails. Simulates
+  a task humans perform daily in customer support and operations roles.
+
+author: "OpenEnv Hackathon Submission"
+license: MIT
+
+task_type: classification
+domain: business_operations
+real_world_task: email_triage
+
+observation_space:
+  type: structured
+  fields:
+    - name: email_id
+      type: string
+    - name: subject
+      type: string
+    - name: sender
+      type: string
+    - name: body
+      type: string
+    - name: timestamp
+      type: string
+    - name: task_id
+      type: string
+      values: [easy, medium, hard]
+    - name: task_description
+      type: string
+    - name: available_priorities
+      type: list[string]
+    - name: available_categories
+      type: list[string]
+    - name: available_routes
+      type: list[string]
+
+action_space:
+  type: structured
+  fields:
+    - name: priority
+      type: string
+      values: [urgent, high, medium, low]
+    - name: category
+      type: string
+      values: [billing, technical_support, account, sales, spam, general]
+    - name: route
+      type: string
+      values: [billing_team, tech_support_team, account_team, sales_team, trash, general_queue]
+    - name: summary
+      type: string
+      description: "One-sentence summary of the email, max 20 words"
+
+reward:
+  type: float
+  range: [0.0, 1.0]
+  description: >
+    Partial credit scoring across 4 dimensions:
+    priority (0.4), category (0.35), route (0.2), summary (0.05).
+    Priority allows ±1 level partial credit (0.2 for off-by-one).
+  signals:
+    - name: priority_score
+      weight: 0.40
+    - name: category_score
+      weight: 0.35
+    - name: route_score
+      weight: 0.20
+    - name: summary_score
+      weight: 0.05
+
+tasks:
+  - id: easy
+    description: "Triage emails with clear, unambiguous signals"
+    expected_difficulty: easy
+    num_emails: 3
+    baseline_score: 0.95
+
+  - id: medium
+    description: "Triage emails requiring reading between the lines"
+    expected_difficulty: medium
+    num_emails: 3
+    baseline_score: 0.82
+
+  - id: hard
+    description: "Triage complex emails with multiple issues or subtle signals"
+    expected_difficulty: hard
+    num_emails: 3
+    baseline_score: 0.71
+
+tags:
+  - openenv
+  - email
+  - triage
+  - nlp
+  - classification
+  - business
+  - real-world
+
+requirements:
+  python: ">=3.9"
+  dependencies:
+    - pydantic>=2.0
+    - openai>=1.0
